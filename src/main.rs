@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use std::{thread, time};
 use std::fs::{File, read_dir};
 use std::io::{Read, Write};
@@ -31,6 +33,7 @@ fn main() -> io::Result<()> {
         thread::sleep(time::Duration::from_millis(1000 * 60 * min));
     }
 }
+
 // чтение файла
 fn open_file(path: &Path) -> File {
     let display = path.display();
@@ -40,6 +43,7 @@ fn open_file(path: &Path) -> File {
     };
     result
 }
+
 // контент в строку
 fn read_to_string(file: &mut File) -> String {
     let mut strings_from_file = String::new();
@@ -49,6 +53,7 @@ fn read_to_string(file: &mut File) -> String {
     };
     strings_from_file
 }
+
 // копирование в файла
 fn copy_file(s: &str, path: &Path) -> io::Result<()> {
     let mut f = File::create(path)?;
