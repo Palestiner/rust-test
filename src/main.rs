@@ -3,7 +3,6 @@ use std::fs::{File, read_dir};
 use std::io::{Read, Write};
 use std::io;
 use std::path::Path;
-use std::fmt::Error;
 
 const CONF_NAME: &str = "app.txt";
 
