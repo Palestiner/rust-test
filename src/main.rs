@@ -1,7 +1,7 @@
 #![windows_subsystem = "windows"]
 
 use std::{thread, time};
-use std::fs::{File, read_dir};
+use std::fs::{File, read_dir, copy};
 use std::io::{Read, Write};
 use std::io;
 use std::path::Path;
@@ -12,7 +12,8 @@ fn main() -> io::Result<()> {
     // Чтение файла конфигурации
     let mut conf_file = open_file(Path::new(CONF_NAME));
     let conf_content = read_to_string(&mut conf_file);
-    let split = conf_content.split("\n").collect::<Vec<&str>>();
+    let mut cow = String::from_utf8_lossy(conf_content.as_ref()).to_string();
+    let split = cow.split("\n").collect::<Vec<&str>>();
     // если количество свойств не равно 3 завершаем программу
     if split.len() != 3 {
         panic!("Not enough properties in {}", CONF_NAME);
@@ -25,11 +26,12 @@ fn main() -> io::Result<()> {
     loop {
         for entry in read_dir(from_path)? {
             let file_path = entry?.path();
-            let mut file = open_file(file_path.as_ref());
-            let file_content = read_to_string(&mut file);
-            let to_file = to.to_string() + &*file_path.file_name().unwrap().to_str().unwrap().to_string();
-            copy_file(file_content.as_str(), Path::new(to_file.as_str()));
+            let to_file = to.to_string() + file_path.file_name().unwrap().to_str().unwrap();
+            if file_path.is_file() {
+                copy(file_path, Path::new(to_file.as_str()));
+            }
         }
+        panic!();
         thread::sleep(time::Duration::from_millis(1000 * 60 * min));
     }
 }
@@ -45,17 +47,17 @@ fn open_file(path: &Path) -> File {
 }
 
 // контент в строку
-fn read_to_string(file: &mut File) -> String {
-    let mut strings_from_file = String::new();
-    match file.read_to_string(&mut strings_from_file) {
+fn read_to_string(file: &mut File) -> Vec<u8> {
+    let mut vec: Vec<u8> = Vec::new();
+    match file.read_to_end(&mut vec) {
         Err(why) => panic!("Couldn't read {:?}: {}", file, why),
         Ok(_) => println!("Correct read {:?}", file),
     };
-    strings_from_file
+    vec
 }
 
 // копирование в файла
-fn copy_file(s: &str, path: &Path) -> io::Result<()> {
+fn copy_file(vec: &Vec<u8>, path: &Path) -> io::Result<()> {
     let mut f = File::create(path)?;
-    f.write_all(s.as_bytes())
+    f.write_all(vec)
 }
